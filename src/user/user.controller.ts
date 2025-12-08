@@ -3,6 +3,7 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { LoginUserDto } from './dto/login-user.dto';
 
 @Controller('users')
 export class UserController {
@@ -12,6 +13,11 @@ export class UserController {
     register(@Body() dto: CreateUserDto) {
         return this.userService.register(dto);
     }
+    @Post('login')
+   login(@Body() dto: LoginUserDto) {
+  return this.userService.login(dto);
+}
+
 
     @UseGuards(JwtAuthGuard)
     @Get('profile')
