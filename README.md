@@ -85,10 +85,10 @@ npm install
 
 ### 3️⃣ Configure MongoDB
 
-Make sure MongoDB is running on default port:
+Make sure for MONGODB:
 
 ```
-mongodb://localhost:27017/driverdb
+create your own .ENV file
 ```
 
 ### 4️⃣ Start Server
