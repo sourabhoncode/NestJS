@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, Matches, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, Matches, MinLength, IsBoolean } from 'class-validator';
 
 export class CreateDriverDto {
   @IsNotEmpty()
@@ -10,15 +10,21 @@ export class CreateDriverDto {
   @IsNotEmpty()
   phone: string;
 
-  @Matches(/^KL-(0[1-9]|1[0-4])-\d{4}-\d{7}$/, { message: 'Invalid license number format' })
+  // Supports both formats:
+  // KL-01-2024-1234567  OR  KL-07-AB-1234
+  @Matches(/^(KL-(0[1-9]|1[0-4])-\d{4}-\d{7}|KL-(0[1-9]|1[0-4])-[A-Z]{2}-\d{4})$/, {
+    message: 'License number must be valid KL format',
+  })
   licenseNumber: string;
 
   @MinLength(6)
   password: string;
 
-  @IsNotEmpty()
+  @MinLength(6)
   confirmPassword: string;
 
+  @IsBoolean()
   termsAccepted: boolean;
+
   photo?: string;
 }

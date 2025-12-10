@@ -1,74 +1,125 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { DriverService } from '../driver/driver.service';
 import { UserService } from '../user/user.service';
-import { RegisterDto } from './dto/register.dto';
+import { CreateUserDto } from '../user/dto/create-user.dto';
+import { CreateDriverDto } from '../driver/dto/create-driver.dto';
+import { LoginUserDto } from '../user/dto/login-user.dto';
+import { LoginDriverDto } from '../driver/dto/login-driver.dto';
+import { UserDocument } from '../schemas/user.schema';
+import { DriverDocument } from '../schemas/driver.schema';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly driverService: DriverService,
     private readonly userService: UserService,
-    private jwtService: JwtService,
+    private readonly jwtService: JwtService,
   ) { }
 
-  async register(dto: RegisterDto) {
-    const { role, password } = dto;
-
-    dto.password = await bcrypt.hash(password, 10);
-
-    let newUser;
+  async registerUser(dto: CreateUserDto) {
+    dto.password = await bcrypt.hash(dto.password, 10);
 
     try {
-      if (role === 'DRIVER') {
-        if (!dto.phone || !dto.licenseNumber) {
-          throw new ConflictException('Driver must provide phone and license number');
-        }
+      const newUser = (await this.userService.create(dto)) as UserDocument;
 
-        newUser = await this.driverService.create(dto);
-      } else {
-        newUser = await this.userService.create(dto);
-      }
+      const token = this.jwtService.sign({
+        id: newUser._id.toString(),
+        role: 'USER',
+      });
 
-    } catch (error) {
-      if (error.code === 11000) {
-        throw new ConflictException('Email already registered');
-      }
+      return {
+        message: 'User Registration Success',
+        token,
+        role: 'USER',
+        user: newUser,
+      };
+    } catch (error: any) {
+      if (error.code === 11000)
+        throw new ConflictException('Email Already Exists');
       throw error;
     }
+  }
 
-    const token = this.jwtService.sign({ id: newUser._id, role });
+  async registerDriver(dto: CreateDriverDto) {
+    if (dto.password !== dto.confirmPassword)
+      throw new ConflictException('Passwords do not match');
+
+    dto.password = await bcrypt.hash(dto.password, 10);
+
+    try {
+      const newDriver = (await this.driverService.create(dto)) as DriverDocument;
+
+      const token = this.jwtService.sign({
+        id: newDriver._id.toString(),
+        role: 'DRIVER',
+      });
+
+      return {
+        message: 'Driver Registration Success',
+        token,
+        role: 'DRIVER',
+        driver: newDriver,
+      };
+    } catch (error: any) {
+      if (error.code === 11000)
+        throw new ConflictException('Driver Already Exists');
+      throw error;
+    }
+  }
+
+  async loginUser(dto: LoginUserDto) {
+    const user = await this.userService.findByEmail(dto.email);
+    if (!user) throw new UnauthorizedException('Invalid Credentials');
+
+    const match = await bcrypt.compare(dto.password, user.password);
+    if (!match) throw new UnauthorizedException('Invalid Credentials');
+
+    const token = this.jwtService.sign({
+      id: user._id.toString(),
+      role: 'USER',
+    });
 
     return {
-      message: 'Registration successful',
+      message: 'Login Success',
       token,
-      role,
-      user: newUser,
+      role: 'USER',
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+      },
     };
   }
 
-  async login(email: string, password: string) {
-    const driver = await this.driverService.findByEmail(email);
-    const user = driver ? null : await this.userService.findByEmail(email);
+  async loginDriver(dto: LoginDriverDto) {
+    const driver = await this.driverService.findByEmail(dto.email);
+    if (!driver) throw new UnauthorizedException('Invalid Credentials');
 
-    const account: any = driver || user;
-    const role = driver ? 'DRIVER' : 'USER';
+    const match = await bcrypt.compare(dto.password, driver.password);
+    if (!match) throw new UnauthorizedException('Invalid Credentials');
 
-    if (!account) throw new UnauthorizedException('Invalid email or password');
-
-    const match = await bcrypt.compare(password, account.password);
-    if (!match) throw new UnauthorizedException('Invalid email or password');
-
-    const token = this.jwtService.sign({ id: account._id, role });
+    const token = this.jwtService.sign({
+      id: driver._id.toString(),
+      role: 'DRIVER',
+    });
 
     return {
-      message: 'Login successful',
+      message: 'Login Success',
       token,
-      role,
-      id: account._id,
-      name: account.fullName,
-      email: account.email,
+      role: 'DRIVER',
+      driver: {
+        id: driver._id,
+        fullName: driver.fullName,
+        email: driver.email,
+        phone: driver.phone,
+        licenseNumber: driver.licenseNumber,
+      },
     };
   }
 }
