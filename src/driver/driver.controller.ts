@@ -1,33 +1,20 @@
-import { Body, Controller, Post, Patch, UseGuards, Request } from '@nestjs/common';
+import { Body, Controller, Patch, UseGuards, Request } from '@nestjs/common';
 import { DriverService } from './driver.service';
-import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { LoginDriverDto } from './dto/login-driver.dto';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { RoleRequired } from '../common/decorators/role.decorator';
+import { Role } from '../common/enums/role.enum';
 
 @Controller('drivers')
 export class DriverController {
-  constructor(private readonly driverService: DriverService) {}
+  constructor(private readonly driverService: DriverService) { }
 
-  @Post('register')
-register(@Body() dto: CreateDriverDto) {
-  console.log('DTO:', dto);
-  return this.driverService.register(dto);
-}
-
-  @Post('login')
-login(@Body() dto: LoginDriverDto) {
-  return this.driverService.login(dto);
-}
-
-
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @RoleRequired(Role.DRIVER)
   @Patch('update')
-  updateDriver(
-    @Request() req,
-    @Body() updateDto: UpdateDriverDto
-  ) {
-    const driverId = req.user.id;
-    return this.driverService.updateDriver(driverId, updateDto);
+  updateDriver(@Request() req, @Body() updateDto: UpdateDriverDto) {
+    return this.driverService.updateDriver(req.user.id, updateDto);
   }
+
 }

@@ -1,49 +1,21 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
-import { CreateUserDto } from './dto/create-user.dto';
-import { LoginUserDto } from './dto/login-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserDocument } from '../schemas/user.schema';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    private jwtService: JwtService,
-  ) {}
+  ) { }
 
-  async register(dto: CreateUserDto): Promise<User> {
-    const exists = await this.userModel.findOne({ email: dto.email });
-    if (exists) throw new ConflictException('User already exists');
-
-    dto.password = await bcrypt.hash(dto.password, 10);
+  // Called by AuthService during registration
+  async create(dto: any): Promise<User> {
     return this.userModel.create(dto);
   }
 
-  async login(dto: LoginUserDto) {
-    const user = await this.userModel.findOne({ email: dto.email });
-    if (!user) throw new UnauthorizedException('Invalid email or password');
-
-    const isMatch = await bcrypt.compare(dto.password, user.password);
-    if (!isMatch) throw new UnauthorizedException('Invalid email or password');
-
-    // 🔐 Generate JWT Token
-    const token = this.jwtService.sign({ id: user._id });
-
-    return {
-      message: 'Login successful',
-      token,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-      },
-    };
-  }
-
+  // Used by AuthService during login
   async findByEmail(email: string) {
     return this.userModel.findOne({ email });
   }
@@ -53,6 +25,10 @@ export class UserService {
   }
 
   async update(id: string, updateDto: UpdateUserDto) {
-    return this.userModel.findByIdAndUpdate(id, updateDto, { new: true }).select('-password');
+    return this.userModel.findByIdAndUpdate(
+      id,
+      updateDto,
+      { new: true }
+    ).select('-password');
   }
 }
