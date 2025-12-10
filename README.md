@@ -1,98 +1,235 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🚗 NestJS Authentication & Role Based Access System
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This project is a backend API built with **NestJS + MongoDB** that supports:
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+- 🔐 JWT Authentication
+- 👤 User Registration & Login
+- 🛠 Driver Registration & Login
+- ✏️ Update Profile (Role-based restrictions)
+- 🛡 Secure routes using Guards & JWT Strategies
+- 🎯 Scalable modular structure
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 📁 Folder Structure
 
-## Project setup
-
-```bash
-$ npm install
 ```
 
-## Compile and run the project
+src/
+│
+├── auth/
+│   ├── auth.controller.ts
+│   ├── auth.service.ts
+│   ├── auth.module.ts
+│   ├── jwt.strategy.ts
+│   └── dto/
+│       └── register.dto.ts
+│
+├── user/
+│   ├── user.controller.ts
+│   ├── user.service.ts
+│   ├── user.module.ts
+│   └── dto/
+│       ├── update-user.dto.ts
+│
+├── driver/
+│   ├── driver.controller.ts
+│   ├── driver.service.ts
+│   ├── driver.module.ts
+│   └── dto/
+│       ├── update-driver.dto.ts
+│
+├── schemas/
+│   ├── user.schema.ts
+│   └── driver.schema.ts
+│
+└── common/
+├── decorators/
+│   ├── role.decorator.ts
+├── enums/
+│   ├── role.enum.ts
+└── guards/
+├── jwt-auth.guard.ts
+└── roles.guard.ts
 
-```bash
-# development
-$ npm run start
+````
 
-# watch mode
-$ npm run start:dev
+---
 
-# production mode
-$ npm run start:prod
+## 🧰 Tech Stack
+
+| Technology | Purpose |
+|-----------|---------|
+| NestJS | Node Framework |
+| MongoDB + Mongoose | Database |
+| Passport-JWT | Authentication Strategy |
+| Bcrypt | Password Hashing |
+| Class Validator | DTO Validation |
+
+---
+
+## 🚀 Installation & Setup
+
+### 1️⃣ Clone Repo
+
+```sh
+git clone https://github.com/sourabhoncode/NestJS.git
+cd NestJS
+````
+
+### 2️⃣ Install Dependencies
+
+```sh
+npm install
 ```
 
-## Run tests
+### 3️⃣ Configure MongoDB
 
-```bash
-# unit tests
-$ npm run test
+Make sure MongoDB is running on default port:
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+```
+mongodb://localhost:27017/driverdb
 ```
 
-## Deployment
+### 4️⃣ Start Server
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```sh
+npm run start:dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+API running 👉 [http://localhost:3000/](http://localhost:3000/)
 
-## Resources
+---
 
-Check out a few resources that may come in handy when working with NestJS:
+## 🔐 Authentication Endpoints
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### 🟩 Register User
 
-## Support
+```
+POST /auth/register
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```json
+{
+  "fullName": "Test User",
+  "email": "user@test.com",
+  "password": "123456",
+  "role": "USER"
+}
+```
 
-## Stay in touch
+### 🟦 Register Driver
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```
+POST /auth/register
+```
 
-## License
+```json
+{
+  "fullName": "Driver Test",
+  "email": "driver@test.com",
+  "password": "123456",
+  "phone": "9999999999",
+  "licenseNumber": "KL-01-2024-1234567",
+  "role": "DRIVER"
+}
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### 🟨 Login
+
+```
+POST /auth/login
+```
+
+```json
+{
+  "email": "user@test.com",
+  "password": "123456"
+}
+```
+
+📌 Response contains JWT token:
+
+```json
+{
+  "message": "Login successful",
+  "token": "JWT_TOKEN",
+  "role": "USER"
+}
+```
+
+---
+
+## 🧑 USER Routes (Token Required)
+
+### Get Profile
+
+```
+GET /users/profile
+Authorization: Bearer <token>
+```
+
+### Update Profile
+
+```
+PATCH /users/update
+Authorization: Bearer <token>
+```
+
+```json
+{
+  "fullName": "Updated User Name"
+}
+```
+
+---
+
+## 🚘 DRIVER Routes (Token Required)
+
+### Update Driver Profile
+
+```
+PATCH /drivers/update
+Authorization: Bearer <token>
+```
+
+```json
+{
+  "phone": "8888888888"
+}
+```
+
+---
+
+## 🛡 Permissions
+
+| Route           | USER      | DRIVER    |
+| --------------- | --------- | --------- |
+| /users/update   | ✔ Allowed | ❌ Block   |
+| /drivers/update | ❌ Block   | ✔ Allowed |
+
+RBAC handled using:
+
+* `@RoleRequired(Role.USER)`
+* `@RoleRequired(Role.DRIVER)`
+* JWT + RolesGuard
+
+---
+
+## 🧩 Future Enhancements
+
+* 🔁 Refresh tokens
+* 📄 Swagger API Docs
+* 🔏 Password Update Endpoint
+* 🗑 Soft delete user/driver
+* 🛠 Upload Driver License & User Image
+
+---
+
+## 📌 Author
+
+👨‍💻 Developed by **Sourabh **
+📧 Email: sourabhshris12@gmail.com
+⚡ Passionate about backend & scalable architecture
+
+---
