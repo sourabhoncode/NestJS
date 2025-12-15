@@ -1,30 +1,48 @@
-import { IsEmail, IsNotEmpty, Matches, MinLength, IsBoolean } from 'class-validator';
+import { IsEmail, IsNotEmpty, MinLength, IsBoolean, IsOptional, Matches } from 'class-validator';
 
 export class CreateDriverDto {
   @IsNotEmpty()
-  fullName: string;
+  name: string;
 
   @IsEmail()
   email: string;
 
   @IsNotEmpty()
-  phone: string;
-
-  // Supports both formats:
-  // KL-01-2024-1234567  OR  KL-07-AB-1234
-  @Matches(/^(KL-(0[1-9]|1[0-4])-\d{4}-\d{7}|KL-(0[1-9]|1[0-4])-[A-Z]{2}-\d{4})$/, {
-    message: 'License number must be valid KL format',
-  })
-  licenseNumber: string;
+  phoneNumber: string;
 
   @MinLength(6)
   password: string;
 
-  @MinLength(6)
-  confirmPassword: string;
+  @IsNotEmpty()
+  address: string;
+
+  @IsOptional()
+  profileImage?: string;
 
   @IsBoolean()
-  termsAccepted: boolean;
+  agreement: boolean;
 
-  photo?: string;
+  @IsNotEmpty()
+  driverLicense: string;
+
+  @IsOptional()
+  personalInfo?: {
+    bloodGroup?: string;
+    certificates?: string[];
+    dob?: string; // DD/MM/YYYY format
+    emergencyContact?: {
+      name: string;
+      phone: string;
+      relationship: string;
+    };
+    languages?: string[];
+  };
+
+  @IsOptional()
+  drivingExperience?: {
+    yearsOfExperience?: number;
+    licensedSince?: string; // DD/MM/YYYY format
+    totalTripsCompleted?: number;
+    averageRating?: number;
+  };
 }

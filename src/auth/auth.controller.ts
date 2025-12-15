@@ -16,11 +16,11 @@ export class AuthController {
 
   @Post('register-driver')
   registerDriver(@Body() dto: CreateDriverDto) {
-    if (!dto.phone || !dto.licenseNumber) {
-      throw new BadRequestException('Phone & License Number required');
+    if (!dto.phoneNumber || !dto.driverLicense) {
+      throw new BadRequestException('Phone Number & Driver License required');
     }
-    if (!dto.termsAccepted) {
-      throw new BadRequestException('Driver must accept terms');
+    if (!dto.agreement) {
+      throw new BadRequestException('Driver must accept agreement');
     }
     return this.authService.registerDriver(dto);
   }

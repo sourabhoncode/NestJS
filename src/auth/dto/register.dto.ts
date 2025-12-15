@@ -1,14 +1,29 @@
-import { IsEmail, IsNotEmpty, MinLength, ValidateIf } from 'class-validator';
+import { IsEmail, IsNotEmpty, MinLength, ValidateIf, IsBoolean } from 'class-validator';
 
 export class RegisterDto {
     @IsNotEmpty()
-    fullName: string;
+    name: string;
 
     @IsEmail()
     email: string;
 
+    @IsNotEmpty()
+    phoneNumber: string;
+
     @MinLength(6)
     password: string;
+
+    @IsNotEmpty()
+    address: string;
+
+    @IsNotEmpty()
+    location: {
+        latitude: number;
+        longitude: number;
+    };
+
+    @IsBoolean()
+    agreement: boolean;
 
     @IsNotEmpty()
     role: 'USER' | 'DRIVER';
@@ -21,7 +36,4 @@ export class RegisterDto {
     @ValidateIf(o => o.role === 'DRIVER')
     @IsNotEmpty()
     licenseNumber?: string;
-
-    // Optional for both — no validation necessary
-    photo?: string;
 }

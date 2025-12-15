@@ -7,19 +7,38 @@ export type UserDocument = User & Document;
 export class User {
 
   @Prop({ required: true })
-  fullName: string;
+  name: string;
 
   @Prop({ required: true, unique: true })
   email: string;
 
   @Prop({ required: true })
+  phoneNumber: string;
+
+  @Prop({ required: true })
   password: string;
 
-  @Prop({ default: null })
-  photo: string;
+  @Prop({ required: true })
+  address: string;
 
-  @Prop({ default: 'USER' })
-  role: string;
+  @Prop({
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true
+    }
+  })
+  location: {
+    type: string;
+    coordinates: number[];
+  };
+
+  @Prop({ required: true, default: false })
+  agreement: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

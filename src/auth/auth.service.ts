@@ -47,9 +47,6 @@ export class AuthService {
   }
 
   async registerDriver(dto: CreateDriverDto) {
-    if (dto.password !== dto.confirmPassword)
-      throw new ConflictException('Passwords do not match');
-
     dto.password = await bcrypt.hash(dto.password, 10);
 
     try {
@@ -91,7 +88,7 @@ export class AuthService {
       role: 'USER',
       user: {
         id: user._id,
-        fullName: user.fullName,
+        name: user.name,
         email: user.email,
       },
     };
@@ -115,10 +112,10 @@ export class AuthService {
       role: 'DRIVER',
       driver: {
         id: driver._id,
-        fullName: driver.fullName,
+        name: driver.name,
         email: driver.email,
-        phone: driver.phone,
-        licenseNumber: driver.licenseNumber,
+        phoneNumber: driver.phoneNumber,
+        driverLicense: driver.driverLicense,
       },
     };
   }

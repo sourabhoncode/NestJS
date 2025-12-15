@@ -4,17 +4,24 @@ import { DriverService } from './driver.service';
 import { DriverController } from './driver.controller';
 import { Driver, DriverSchema } from '../schemas/driver.schema';
 import { JwtModule } from '@nestjs/jwt';
+import { VehicleModule } from './vehicle/vehicle.module';
+import { BookingModule } from './booking/booking.module';
+import { DateTransformer } from '../common/transformers/date.transformer';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Driver.name, schema: DriverSchema }]),
+    MongooseModule.forFeature([
+      { name: Driver.name, schema: DriverSchema },
+    ]),
     JwtModule.register({
       secret: 'MY_SECRET_KEY',
       signOptions: { expiresIn: '7d' },
     }),
+    VehicleModule,
+    BookingModule,
   ],
   controllers: [DriverController],
-  providers: [DriverService],
+  providers: [DriverService, DateTransformer],
   exports: [DriverService],
 })
-export class DriverModule {}
+export class DriverModule { }

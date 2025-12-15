@@ -1,4 +1,10 @@
-import { Body, Controller, Patch, UseGuards, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Patch,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { DriverService } from './driver.service';
 import { UpdateDriverDto } from './dto/update-driver.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -16,5 +22,4 @@ export class DriverController {
   updateDriver(@Request() req, @Body() updateDto: UpdateDriverDto) {
     return this.driverService.updateDriver(req.user.id, updateDto);
   }
-
 }
