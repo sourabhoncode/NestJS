@@ -5,7 +5,6 @@ export type UserDocument = User & Document;
 
 @Schema({ timestamps: true })
 export class User {
-
   @Prop({ required: true })
   name: string;
 
@@ -25,12 +24,12 @@ export class User {
     type: {
       type: String,
       enum: ['Point'],
-      default: 'Point'
+      default: 'Point',
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
-      required: true
-    }
+      required: true,
+    },
   })
   location: {
     type: string;

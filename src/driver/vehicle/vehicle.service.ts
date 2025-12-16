@@ -47,11 +47,11 @@ export class VehicleService {
         documentType: string,
         documentUrl: string,
     ) {
-        const updateObj = {};
-        updateObj[documentType] = documentUrl;
-        return this.vehicleModel.findByIdAndUpdate(vehicleId, updateObj, {
-            new: true,
-        });
+        return this.vehicleModel.findByIdAndUpdate(
+            vehicleId,
+            { $set: { [`documents.${documentType}`]: documentUrl } },
+            { new: true },
+        );
     }
 
     async addVehicleImages(vehicleId: string, imageUrls: string[]) {
