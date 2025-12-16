@@ -1,6 +1,7 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Booking, BookingSchema } from '../../schemas/booking.schema';
+import { Booking, BookingSchema } from '../schemas/booking.schema';
 import { BookingService } from './booking.service';
 import { BookingController } from './booking.controller';
 

@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { DriverModule } from './driver/driver.module';
+import { BookingModule } from './booking/booking.module';
 import { HttpLoggingMiddleware } from './common/middleware/http-logging.middleware';
 
 @Module({
@@ -22,6 +23,7 @@ import { HttpLoggingMiddleware } from './common/middleware/http-logging.middlewa
     AuthModule,
     UserModule,
     DriverModule,
+    BookingModule,
   ],
 })
 export class AppModule implements NestModule {

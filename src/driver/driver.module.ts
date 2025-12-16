@@ -5,7 +5,6 @@ import { DriverController } from './driver.controller';
 import { Driver, DriverSchema } from '../schemas/driver.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { VehicleModule } from './vehicle/vehicle.module';
-import { BookingModule } from './booking/booking.module';
 import { DateTransformer } from '../common/transformers/date.transformer';
 
 @Module({
@@ -18,7 +17,6 @@ import { DateTransformer } from '../common/transformers/date.transformer';
       signOptions: { expiresIn: '7d' },
     }),
     VehicleModule,
-    BookingModule,
   ],
   controllers: [DriverController],
   providers: [DriverService, DateTransformer],
