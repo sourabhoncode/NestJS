@@ -1,17 +1,18 @@
-# 🚗 NestJS Authentication & Role Based Access System
+# 🚗 Gokeral - NestJS Ride-Sharing Backend
 
-This project is a backend API built with **NestJS + MongoDB** that supports:
+A robust backend API built with **NestJS + MongoDB** for a ride-sharing platform with comprehensive user and driver management.
 
-- 🔐 JWT Authentication
-- 👤 User Registration & Login
-- 🛠 Driver Registration & Login with Vehicle Management
-- 🚙 Vehicle Management System
-- 📅 Booking System with Rating
-- ✏️ Update Profile (Role-based restrictions)
-- 🛡 Secure routes using Guards & JWT Strategies
-- 📝 Global Exception & Validation Filters
-- 📊 HTTP Logging Middleware
-- 🎯 Scalable modular structure
+### ✨ Core Features
+
+- 🔐 **JWT Authentication** - Secure token-based authentication
+- 👤 **User Management** - Registration, login, and profile management
+- 🚗 **Driver Management** - Full driver registration with license verification
+- 🚙 **Vehicle Management** - Support for S3-based documents and images
+- 📅 **Advanced Booking System** - Create, track, and rate rides
+- 🛡️ **Role-Based Access Control** - USER and DRIVER roles with route guards
+- 📝 **Global Exception Handling** - Unified error responses
+- 📊 **HTTP Logging Middleware** - Request tracking and monitoring
+- 🎯 **Scalable Architecture** - Modular, production-ready structure
 
 ---
 
@@ -145,55 +146,95 @@ API running 👉 [http://localhost:3000/](http://localhost:3000/)
 ### 🟩 Register User
 
 ```
-POST /auth/register
+POST /auth/register-user
 ```
 
+**Request Body:**
 ```json
 {
-  "fullName": "Test User",
-  "email": "user@test.com",
-  "password": "123456",
-  "role": "USER"
+  "fullName": "John Doe",
+  "email": "john@example.com",
+  "phoneNumber": "+1234567890",
+  "password": "Password123",
+  "address": "123 Main Street, City, Country",
+  "location": {
+    "latitude": 40.7128,
+    "longitude": -74.0060
+  },
+  "agreement": true
 }
 ```
+
+**Fields:**
+- `fullName` (string, required) - User's full name
+- `email` (string, required, unique) - Email address
+- `phoneNumber` (string, required) - Contact number
+- `password` (string, required, min 6 chars) - Login password
+- `address` (string, required) - Physical address
+- `location` (object, required) - GPS coordinates
+  - `latitude` (number) - Latitude coordinate
+  - `longitude` (number) - Longitude coordinate
+- `agreement` (boolean, required) - Terms & conditions agreement
+
+---
 
 ### 🟦 Register Driver
 
 ```
-POST /auth/register
+POST /auth/register-driver
 ```
 
+**Request Body:**
 ```json
 {
-  "fullName": "Driver Test",
-  "email": "driver@test.com",
-  "password": "123456",
-  "phone": "9999999999",
-  "licenseNumber": "KL-01-2024-1234567",
-  "role": "DRIVER"
+  "fullName": "Jane Smith",
+  "email": "jane@example.com",
+  "phoneNumber": "+1987654321",
+  "driverLicenseNumber": "DL123456789",
+  "password": "Password123",
+  "address": "456 Oak Avenue, City, Country",
+  "agreement": true
 }
 ```
 
-### 🟨 Login
+**Fields:**
+- `fullName` (string, required) - Driver's full name
+- `email` (string, required, unique) - Email address
+- `phoneNumber` (string, required) - Contact number
+- `driverLicenseNumber` (string, required) - License number
+- `password` (string, required, min 6 chars) - Login password
+- `address` (string, required) - Physical address
+- `agreement` (boolean, required) - Terms & conditions agreement
+
+---
+
+### 🟨 User Login
 
 ```
-POST /auth/login
+POST /auth/login-user
 ```
 
+**Request Body:**
 ```json
 {
-  "email": "user@test.com",
-  "password": "123456"
+  "email": "john@example.com",
+  "password": "Password123"
 }
 ```
 
-📌 Response contains JWT token:
+---
 
+### 🟧 Driver Login
+
+```
+POST /auth/login-driver
+```
+
+**Request Body:**
 ```json
 {
-  "message": "Login successful",
-  "token": "JWT_TOKEN",
-  "role": "USER"
+  "email": "jane@example.com",
+  "password": "Password123"
 }
 ```
 
@@ -212,12 +253,15 @@ Authorization: Bearer <token>
 
 ```
 PATCH /users/update
-Authorization: Bearer <token>
+Authorization: Bearer <JWT_TOKEN>
 ```
 
+**Request Body:**
 ```json
 {
-  "fullName": "Updated User Name"
+  "fullName": "Updated Name",
+  "phoneNumber": "+1234567890",
+  "address": "New Address"
 }
 ```
 
@@ -229,12 +273,15 @@ Authorization: Bearer <token>
 
 ```
 PATCH /drivers/update
-Authorization: Bearer <token>
+Authorization: Bearer <JWT_TOKEN>
 ```
 
+**Request Body:**
 ```json
 {
-  "phone": "8888888888"
+  "fullName": "Updated Driver Name",
+  "phoneNumber": "+1987654321",
+  "address": "New Driver Address"
 }
 ```
 
@@ -245,39 +292,61 @@ Authorization: Bearer <token>
 ### Create Vehicle
 
 ```
-POST /drivers/vehicles/create
-Authorization: Bearer <token>
+POST /drivers/vehicles
+Authorization: Bearer <JWT_TOKEN>
 ```
 
+**Request Body:**
 ```json
 {
-  "licenseNumber": "KL-01-2024-1234567",
-  "registrationNumber": "KL-01-AB-1234",
-  "model": "Honda City",
+  "companyName": "Tesla Motors",
+  "model": "Model 3",
   "year": 2023,
-  "seatingCapacity": 5
+  "seats": 5,
+  "licensePlateNumber": "ABC123XYZ",
+  "vehicleType": "Sedan",
+  "vehicleClass": "Economy",
+  "vehicleImage": "https://example-bucket.s3.amazonaws.com/vehicles/tesla-model-3.jpg",
+  "documents": {
+    "drivingLicense": "https://example-bucket.s3.amazonaws.com/documents/dl.pdf",
+    "insuranceProof": "https://example-bucket.s3.amazonaws.com/documents/insurance.pdf",
+    "addressProof": "https://example-bucket.s3.amazonaws.com/documents/address.pdf",
+    "policeCertificate": "https://example-bucket.s3.amazonaws.com/documents/police-cert.pdf"
+  },
+  "fareStructure": {
+    "minimumFare": 5.00,
+    "perKilometerRate": 1.50,
+    "waitingChargePerMinute": 0.30
+  }
 }
 ```
 
-### Get Driver Vehicles
+### Get All Vehicles
 
 ```
 GET /drivers/vehicles
-Authorization: Bearer <token>
+Authorization: Bearer <JWT_TOKEN>
+```
+
+### Get Vehicle Details
+
+```
+GET /drivers/vehicles/:vehicleId
+Authorization: Bearer <JWT_TOKEN>
 ```
 
 ### Update Vehicle
 
 ```
 PATCH /drivers/vehicles/:vehicleId
-Authorization: Bearer <token>
+Authorization: Bearer <JWT_TOKEN>
 ```
 
 ### Delete Vehicle
 
 ```
 DELETE /drivers/vehicles/:vehicleId
-Authorization: Bearer <token>
+Authorization: Bearer <JWT_TOKEN>
 ```
 
 ---
@@ -287,109 +356,194 @@ Authorization: Bearer <token>
 ### Create Booking
 
 ```
-POST /drivers/bookings/create
-Authorization: Bearer <token>
+POST /bookings/create
+Authorization: Bearer <JWT_TOKEN>
 ```
 
+**Request Body:**
 ```json
 {
-  "passengerName": "John Doe",
+  "userId": "user_id",
+  "driverId": "driver_id",
+  "vehicleId": "vehicle_id",
   "pickupLocation": "Downtown",
   "dropoffLocation": "Airport",
-  "fare": 250,
-  "vehicleId": "vehicle_id_here"
+  "fare": 250.00
 }
 ```
 
-### Get Bookings
+### Get My Bookings
 
 ```
-GET /drivers/bookings
-Authorization: Bearer <token>
+GET /bookings/my-bookings
+Authorization: Bearer <JWT_TOKEN>
+```
+
+### Get Pending Bookings
+
+```
+GET /bookings/my-bookings/pending
+Authorization: Bearer <JWT_TOKEN>
 ```
 
 ### Get Booking Details
 
 ```
-GET /drivers/bookings/:bookingId
-Authorization: Bearer <token>
+GET /bookings/:bookingId
+Authorization: Bearer <JWT_TOKEN>
 ```
 
-### Update Booking Status
+### Cancel Booking
 
 ```
-PATCH /drivers/bookings/:bookingId
-Authorization: Bearer <token>
-```
-
-```json
-{
-  "status": "COMPLETED"
-}
+PATCH /bookings/:bookingId/cancel
+Authorization: Bearer <JWT_TOKEN>
 ```
 
 ### Rate Booking
 
 ```
-POST /drivers/bookings/:bookingId/rate
-Authorization: Bearer <token>
+POST /bookings/:bookingId/rate
+Authorization: Bearer <JWT_TOKEN>
 ```
 
+**Request Body:**
 ```json
 {
   "rating": 5,
-  "comment": "Great ride!"
+  "comment": "Great driver and smooth ride!"
 }
+```
+
+### Accept Booking (Driver Only)
+
+```
+POST /bookings/:bookingId/accept
+Authorization: Bearer <JWT_TOKEN>
+```
+
+### Start Booking (Driver Only)
+
+```
+PATCH /bookings/:bookingId/start
+Authorization: Bearer <JWT_TOKEN>
+```
+
+### Complete Booking (Driver Only)
+
+```
+PATCH /bookings/:bookingId/complete
+Authorization: Bearer <JWT_TOKEN>
 ```
 
 ---
 
-## 🛡 Permissions
+## 🛡️ Role-Based Access Control (RBAC)
 
-| Route                      | USER      | DRIVER    |
-| -------------------------- | --------- | --------- |
-| /users/update              | ✔ Allowed | ❌ Block   |
-| /drivers/update            | ❌ Block   | ✔ Allowed |
-| /drivers/vehicles/*        | ❌ Block   | ✔ Allowed |
-| /drivers/bookings/*        | ❌ Block   | ✔ Allowed |
+| Route                   | USER      | DRIVER    |
+| :---------------------- | :-------: | :-------: |
+| `/auth/register-user`   | ✔ Public  | ✔ Public  |
+| `/auth/register-driver` | ✔ Public  | ✔ Public  |
+| `/auth/login-user`      | ✔ Public  | ✔ Public  |
+| `/auth/login-driver`    | ✔ Public  | ✔ Public  |
+| `/users/profile`        | ✔ Allowed | ❌ Blocked |
+| `/users/update`         | ✔ Allowed | ❌ Blocked |
+| `/drivers/update`       | ❌ Blocked | ✔ Allowed |
+| `/drivers/vehicles/*`   | ❌ Blocked | ✔ Allowed |
+| `/bookings/my-bookings` | ✔ Allowed | ✔ Allowed |
 
-RBAC handled using:
-
-* `@RoleRequired(Role.USER)`
-* `@RoleRequired(Role.DRIVER)`
-* JWT + RolesGuard
+**RBAC Implementation:**
+- `@RoleRequired(Role.USER)` - User only routes
+- `@RoleRequired(Role.DRIVER)` - Driver only routes
+- `JwtAuthGuard` - Token validation
+- `RolesGuard` - Role enforcement
 
 ---
 
-## �🛡 Permissions
+## 🗄️ Database Schemas
 
-| Route           | USER      | DRIVER    |
-| --------------- | --------- | --------- |
-| /users/update   | ✔ Allowed | ❌ Block   |
-| /drivers/update | ❌ Block   | ✔ Allowed |
+### User Schema
+- `fullName` - User's full name (string, required)
+- `email` - Unique email address (string, required, unique)
+- `phoneNumber` - Contact number (string, required)
+- `password` - Hashed password using bcrypt (string, required)
+- `address` - Physical address (string, required)
+- `location` - GeoJSON point {type: "Point", coordinates: [longitude, latitude]}
+- `agreement` - Terms acceptance flag (boolean, required)
 
-RBAC handled using:
+### Driver Schema
+- `fullName` - Driver's full name (string, required)
+- `email` - Unique email address (string, required, unique)
+- `phoneNumber` - Contact number (string, required)
+- `driverLicenseNumber` - Unique license number (string, required, unique)
+- `password` - Hashed password (string, required)
+- `address` - Physical address (string, required)
+- `profileImage` - Profile image S3 URL (string, optional)
+- `personalInfo` - Additional driver info including emergency contacts
+- `drivingExperience` - Experience details (years, trips, rating)
+- `role` - Always set to "DRIVER"
 
-* `@RoleRequired(Role.USER)`
-* `@RoleRequired(Role.DRIVER)`
-* JWT + RolesGuard
+### Vehicle Schema
+- `companyName` - Manufacturer/company (string, required)
+- `model` - Vehicle model (string, required)
+- `year` - Manufacturing year (number, required)
+- `seats` - Seating capacity (number, required, min 1)
+- `licensePlateNumber` - Unique plate number (string, required)
+- `vehicleType` - Type: Sedan, SUV, Auto, etc. (string, required)
+- `vehicleClass` - Class: Economy, Premium, Luxury (string, required)
+- `vehicleImage` - Vehicle image S3 URL (string, optional)
+- `documents` - S3 URLs for DL, insurance, address proof, police certificate
+- `fareStructure` - Pricing: minimumFare, perKilometerRate, waitingChargePerMinute
+- `driverId` - Reference to driver
+
+### Booking Schema
+- `userId` - Reference to User (ObjectId)
+- `driverId` - Reference to Driver (ObjectId)
+- `vehicleId` - Reference to Vehicle (ObjectId)
+- `pickupLocation` - Pickup address (string, required)
+- `dropoffLocation` - Dropoff address (string, required)
+- `fare` - Ride fare amount (number, required)
+- `status` - PENDING | ACCEPTED | STARTED | COMPLETED | CANCELLED
+- `rating` - Rating 1-5 (number, optional)
+- `comment` - Feedback comment (string, optional)
 
 ---
 
 ## 🧩 Future Enhancements
 
-* 🔁 Refresh tokens
-* 📄 Swagger API Docs
-* 🔏 Password Update Endpoint
-* 🗑 Soft delete user/driver
-* 🛠 Upload Driver License & User Image
+- 🔁 Refresh token implementation
+- 📄 Swagger/OpenAPI documentation
+- 🔏 Password reset functionality
+- 📱 Real-time notifications
+- 💳 Payment gateway integration
+- 🗺️ Live GPS tracking
+- ⭐ Advanced rating system
+- 📞 SMS/Email notifications
 
 ---
 
-## 📌 Author
+## 📄 License
 
-👨‍💻 Developed by **Sourabh **
-📧 Email: sourabhshris12@gmail.com
-⚡ Passionate about backend & scalable architecture
+MIT License - Feel free to use and modify for your projects!
 
 ---
+
+## 👨‍💻 Developed by Corestone Innovations
+
+For support and inquiries, contact the development team.
+
+*Last Updated: December 18, 2025*
+- 🗺️ Live GPS tracking
+- ⭐ Advanced rating system
+
+---
+
+## 📄 License
+
+MIT License
+
+---
+
+## 👨‍💻 Developed by Corestone Innovations
+
+*Last Updated: December 2025*
