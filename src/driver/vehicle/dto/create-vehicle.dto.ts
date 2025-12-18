@@ -14,19 +14,19 @@ import { Type } from 'class-transformer';
 class DocumentsDto {
     @IsOptional()
     @IsString()
-    Driving_Licence?: string;
+    drivingLicense?: string;
 
     @IsOptional()
     @IsString()
-    Police_Clearance_Certificate?: string;
+    insuranceProof?: string;
 
     @IsOptional()
     @IsString()
-    Proof_Of_Address?: string;
+    addressProof?: string;
 
     @IsOptional()
     @IsString()
-    Vehicle_Insurance_Proof?: string;
+    policeCertificate?: string;
 }
 
 class FareStructureDto {
@@ -49,11 +49,11 @@ class FareStructureDto {
 export class CreateVehicleDto {
     @IsNotEmpty()
     @IsString()
-    make: string;
+    companyName: string;
 
     @IsNotEmpty()
     @IsString()
-    vehicleModel: string;
+    model: string;
 
     @IsNotEmpty()
     @IsNumber()
@@ -64,11 +64,11 @@ export class CreateVehicleDto {
     @IsNotEmpty()
     @IsNumber()
     @Min(1)
-    seatsNo: number;
+    seats: number;
 
     @IsNotEmpty()
     @IsString()
-    licensePlate: string;
+    licensePlateNumber: string;
 
     @IsNotEmpty()
     @IsString()
@@ -79,8 +79,8 @@ export class CreateVehicleDto {
     vehicleClass: string;
 
     @IsOptional()
-    @IsArray()
-    vehicleImages?: string[];
+    @IsString()
+    vehicleImage?: string;
 
     @IsOptional()
     @IsObject()

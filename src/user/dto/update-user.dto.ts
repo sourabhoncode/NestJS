@@ -2,7 +2,7 @@ import { IsOptional, IsBoolean } from 'class-validator';
 
 export class UpdateUserDto {
     @IsOptional()
-    name?: string;
+    fullName?: string;
 
     @IsOptional()
     phoneNumber?: string;

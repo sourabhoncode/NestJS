@@ -2,7 +2,7 @@ import { IsEmail, IsNotEmpty, MinLength, IsBoolean, IsOptional, Matches } from '
 
 export class CreateDriverDto {
   @IsNotEmpty()
-  name: string;
+  fullName: string;
 
   @IsEmail()
   email: string;
@@ -14,6 +14,9 @@ export class CreateDriverDto {
   password: string;
 
   @IsNotEmpty()
+  driverLicenseNumber: string;
+
+  @IsNotEmpty()
   address: string;
 
   @IsOptional()
@@ -21,9 +24,6 @@ export class CreateDriverDto {
 
   @IsBoolean()
   agreement: boolean;
-
-  @IsNotEmpty()
-  driverLicense: string;
 
   @IsOptional()
   personalInfo?: {

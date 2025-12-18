@@ -88,7 +88,7 @@ export class AuthService {
       role: 'USER',
       user: {
         id: user._id,
-        name: user.name,
+        fullName: user.fullName,
         email: user.email,
       },
     };
@@ -112,10 +112,10 @@ export class AuthService {
       role: 'DRIVER',
       driver: {
         id: driver._id,
-        name: driver.name,
+        fullName: driver.fullName,
         email: driver.email,
         phoneNumber: driver.phoneNumber,
-        driverLicense: driver.driverLicense,
+        driverLicenseNumber: driver.driverLicenseNumber,
       },
     };
   }

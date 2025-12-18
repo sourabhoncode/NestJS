@@ -16,7 +16,7 @@ export class AuthController {
 
   @Post('register-driver')
   registerDriver(@Body() dto: CreateDriverDto) {
-    if (!dto.phoneNumber || !dto.driverLicense) {
+    if (!dto.phoneNumber || !dto.driverLicenseNumber) {
       throw new BadRequestException('Phone Number & Driver License required');
     }
     if (!dto.agreement) {

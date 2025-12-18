@@ -6,7 +6,7 @@ export type DriverDocument = Driver & Document;
 @Schema({ timestamps: true })
 export class Driver {
   @Prop({ required: true })
-  name: string;
+  fullName: string;
 
   @Prop({ required: true, unique: true })
   email: string;
@@ -27,7 +27,7 @@ export class Driver {
   agreement: boolean;
 
   @Prop({ required: true, unique: true })
-  driverLicense: string;
+  driverLicenseNumber: string;
 
   @Prop({
     type: {
