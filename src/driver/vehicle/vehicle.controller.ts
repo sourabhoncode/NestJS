@@ -8,7 +8,11 @@ import {
     Param,
     UseGuards,
     Request,
+    UseInterceptors,
+    UploadedFile,
+    BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { VehicleService } from './vehicle.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
@@ -16,10 +20,14 @@ import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { RoleRequired } from '../../common/decorators/role.decorator';
 import { Role } from '../../common/enums/role.enum';
+import { S3Service } from '../../common/services/s3.service';
 
 @Controller('drivers/vehicles')
 export class VehicleController {
-    constructor(private readonly vehicleService: VehicleService) { }
+    constructor(
+        private readonly vehicleService: VehicleService,
+        private readonly s3Service: S3Service,
+    ) { }
 
     @UseGuards(JwtAuthGuard, RolesGuard)
     @RoleRequired(Role.DRIVER)
@@ -96,4 +104,63 @@ export class VehicleController {
     ) {
         return this.vehicleService.removeVehicleImage(vehicleId, imageUrl);
     }
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @RoleRequired(Role.DRIVER)
+    @Post(':vehicleId/upload-document')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadVehicleDocument(
+        @Param('vehicleId') vehicleId: string,
+        @UploadedFile() file: Express.Multer.File,
+    ) {
+        if (!file) {
+            throw new BadRequestException('No file provided');
+        }
+
+        try {
+            const { url, key } = await this.s3Service.uploadFile(
+                file,
+                `vehicles/${vehicleId}/documents`,
+            );
+            return {
+                message: 'Document uploaded successfully',
+                url,
+                key,
+                size: file.size,
+                type: file.mimetype,
+            };
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @RoleRequired(Role.DRIVER)
+    @Post(':vehicleId/upload-image')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadVehicleImage(
+        @Param('vehicleId') vehicleId: string,
+        @UploadedFile() file: Express.Multer.File,
+    ) {
+        if (!file) {
+            throw new BadRequestException('No file provided');
+        }
+
+        try {
+            const { url, key } = await this.s3Service.uploadFile(
+                file,
+                `vehicles/${vehicleId}/images`,
+            );
+            return {
+                message: 'Image uploaded successfully',
+                url,
+                key,
+                size: file.size,
+                type: file.mimetype,
+            };
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
 }
+

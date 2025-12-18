@@ -6,6 +6,7 @@ import { Driver, DriverSchema } from '../schemas/driver.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { VehicleModule } from './vehicle/vehicle.module';
 import { DateTransformer } from '../common/transformers/date.transformer';
+import { S3Service } from '../common/services/s3.service';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { DateTransformer } from '../common/transformers/date.transformer';
     VehicleModule,
   ],
   controllers: [DriverController],
-  providers: [DriverService, DateTransformer],
+  providers: [DriverService, DateTransformer, S3Service],
   exports: [DriverService],
 })
 export class DriverModule { }

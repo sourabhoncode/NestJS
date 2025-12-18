@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { VehicleService } from './vehicle.service';
 import { VehicleController } from './vehicle.controller';
 import { Vehicle, VehicleSchema } from '../../schemas/vehicle.schema';
+import { S3Service } from '../../common/services/s3.service';
 
 @Module({
     imports: [
@@ -11,7 +12,7 @@ import { Vehicle, VehicleSchema } from '../../schemas/vehicle.schema';
         ]),
     ],
     controllers: [VehicleController],
-    providers: [VehicleService],
+    providers: [VehicleService, S3Service],
     exports: [VehicleService],
 })
 export class VehicleModule { }
