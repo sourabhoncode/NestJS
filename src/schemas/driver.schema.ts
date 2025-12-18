@@ -17,15 +17,6 @@ export class Driver {
   @Prop({ required: true })
   password: string;
 
-  @Prop({ required: true })
-  address: string;
-
-  @Prop()
-  profileImage: string;
-
-  @Prop({ required: true })
-  agreement: boolean;
-
   @Prop({ required: true, unique: true })
   driverLicenseNumber: string;
 

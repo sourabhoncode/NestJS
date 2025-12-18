@@ -29,23 +29,6 @@ class DocumentsDto {
     policeCertificate?: string;
 }
 
-class FareStructureDto {
-    @IsNotEmpty()
-    @IsNumber()
-    @Min(0)
-    minimumFare: number;
-
-    @IsNotEmpty()
-    @IsNumber()
-    @Min(0)
-    perKilometerRate: number;
-
-    @IsNotEmpty()
-    @IsNumber()
-    @Min(0)
-    waitingChargePerMinute: number;
-}
-
 export class CreateVehicleDto {
     @IsNotEmpty()
     @IsString()
@@ -87,10 +70,4 @@ export class CreateVehicleDto {
     @ValidateNested()
     @Type(() => DocumentsDto)
     documents?: DocumentsDto;
-
-    @IsNotEmpty()
-    @IsObject()
-    @ValidateNested()
-    @Type(() => FareStructureDto)
-    fareStructure: FareStructureDto;
 }

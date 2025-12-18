@@ -16,15 +16,6 @@ export class CreateDriverDto {
   @IsNotEmpty()
   driverLicenseNumber: string;
 
-  @IsNotEmpty()
-  address: string;
-
-  @IsOptional()
-  profileImage?: string;
-
-  @IsBoolean()
-  agreement: boolean;
-
   @IsOptional()
   personalInfo?: {
     bloodGroup?: string;

@@ -6,17 +6,4 @@ export class UpdateUserDto {
 
     @IsOptional()
     phoneNumber?: string;
-
-    @IsOptional()
-    address?: string;
-
-    @IsOptional()
-    location?: {
-        latitude: number;
-        longitude: number;
-    };
-
-    @IsOptional()
-    @IsBoolean()
-    agreement?: boolean;
 }

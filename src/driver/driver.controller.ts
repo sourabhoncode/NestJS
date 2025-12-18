@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Patch,
+  Delete,
   UseGuards,
   Request,
 } from '@nestjs/common';
@@ -21,5 +22,10 @@ export class DriverController {
   @Patch('update')
   updateDriver(@Request() req, @Body() updateDto: UpdateDriverDto) {
     return this.driverService.updateDriver(req.user.id, updateDto);
+  }
+
+  @Delete('reset')
+  async resetDrivers() {
+    return this.driverService.resetCollection();
   }
 }

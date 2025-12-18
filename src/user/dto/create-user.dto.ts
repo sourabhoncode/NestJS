@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, MinLength, IsPhoneNumber, IsBoolean } from 'class-validator';
+import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
 
 export class CreateUserDto {
 
@@ -13,16 +13,4 @@ export class CreateUserDto {
 
   @MinLength(6)
   password: string;
-
-  @IsNotEmpty()
-  address: string;
-
-  @IsNotEmpty()
-  location: {
-    latitude: number;
-    longitude: number;
-  };
-
-  @IsBoolean()
-  agreement: boolean;
 }

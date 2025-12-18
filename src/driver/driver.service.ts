@@ -33,4 +33,9 @@ export class DriverService {
       .findByIdAndUpdate(id, { $set: transformedDto }, { new: true })
       .select('-password');
   }
+
+  async resetCollection() {
+    await this.driverModel.collection.drop();
+    return { message: 'Drivers collection reset successfully' };
+  }
 }

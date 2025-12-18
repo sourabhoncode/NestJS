@@ -40,8 +40,10 @@ export class AuthService {
         user: newUser,
       };
     } catch (error: any) {
-      if (error.code === 11000)
-        throw new ConflictException('Email Already Exists');
+      if (error.code === 11000) {
+        const field = Object.keys(error.keyPattern)[0];
+        throw new ConflictException(`${field.charAt(0).toUpperCase() + field.slice(1)} Already Exists`);
+      }
       throw error;
     }
   }
@@ -64,8 +66,10 @@ export class AuthService {
         driver: newDriver,
       };
     } catch (error: any) {
-      if (error.code === 11000)
-        throw new ConflictException('Driver Already Exists');
+      if (error.code === 11000) {
+        const field = Object.keys(error.keyPattern)[0];
+        throw new ConflictException(`${field.charAt(0).toUpperCase() + field.slice(1)} Already Exists`);
+      }
       throw error;
     }
   }

@@ -155,13 +155,7 @@ POST /auth/register-user
   "fullName": "John Doe",
   "email": "john@example.com",
   "phoneNumber": "+1234567890",
-  "password": "Password123",
-  "address": "123 Main Street, City, Country",
-  "location": {
-    "latitude": 40.7128,
-    "longitude": -74.0060
-  },
-  "agreement": true
+  "password": "Password123"
 }
 ```
 
@@ -170,11 +164,6 @@ POST /auth/register-user
 - `email` (string, required, unique) - Email address
 - `phoneNumber` (string, required) - Contact number
 - `password` (string, required, min 6 chars) - Login password
-- `address` (string, required) - Physical address
-- `location` (object, required) - GPS coordinates
-  - `latitude` (number) - Latitude coordinate
-  - `longitude` (number) - Longitude coordinate
-- `agreement` (boolean, required) - Terms & conditions agreement
 
 ---
 
@@ -191,9 +180,7 @@ POST /auth/register-driver
   "email": "jane@example.com",
   "phoneNumber": "+1987654321",
   "driverLicenseNumber": "DL123456789",
-  "password": "Password123",
-  "address": "456 Oak Avenue, City, Country",
-  "agreement": true
+  "password": "Password123"
 }
 ```
 
@@ -201,10 +188,8 @@ POST /auth/register-driver
 - `fullName` (string, required) - Driver's full name
 - `email` (string, required, unique) - Email address
 - `phoneNumber` (string, required) - Contact number
-- `driverLicenseNumber` (string, required) - License number
+- `driverLicenseNumber` (string, required, unique) - License number
 - `password` (string, required, min 6 chars) - Login password
-- `address` (string, required) - Physical address
-- `agreement` (boolean, required) - Terms & conditions agreement
 
 ---
 
@@ -280,10 +265,19 @@ Authorization: Bearer <JWT_TOKEN>
 ```json
 {
   "fullName": "Updated Driver Name",
-  "phoneNumber": "+1987654321",
-  "address": "New Driver Address"
+  "phoneNumber": "+1987654321"
 }
 ```
+
+### Reset Drivers Collection (Dev Only)
+
+```
+DELETE /drivers/reset
+```
+
+**Purpose:** Clear all drivers from database and reset MongoDB indexes. Use this during development to remove duplicate key conflicts.
+
+**Note:** This endpoint is for development/testing only. Remove or protect it in production.
 
 ---
 
