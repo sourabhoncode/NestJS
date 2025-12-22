@@ -26,6 +26,7 @@ export const DriverProfile = () => {
   const [loading, setLoading] = useState(true);
   const [personalInfoModalOpen, setPersonalInfoModalOpen] = useState(false);
   const [addVehicleModalOpen, setAddVehicleModalOpen] = useState(false);
+  const [vehiclesRefreshSignal, setVehiclesRefreshSignal] = useState(0);
   const [driverData, setDriverData] = useState<DriverData>({
     name: "",
     email: "",
@@ -124,6 +125,11 @@ export const DriverProfile = () => {
     setAddVehicleModalOpen(true);
   };
 
+  const handleVehicleAdded = () => {
+    // bump signal to refresh vehicle list in VehiclesTab
+    setVehiclesRefreshSignal((s) => s + 1);
+  };
+
   const handleSavePersonalInfo = (updatedData: {
     dateOfBirth?: string;
     bloodGroup?: string;
@@ -214,7 +220,7 @@ export const DriverProfile = () => {
           />
         );
       case "vehicles":
-        return <VehiclesTab onAddVehicle={handleAddVehicle} />;
+        return <VehiclesTab onAddVehicle={handleAddVehicle} refreshSignal={vehiclesRefreshSignal} />;
       case "bookings":
         return <BookingsTabUser loading={loading} />;
       case "settings":
@@ -270,6 +276,15 @@ export const DriverProfile = () => {
             email: driverData.email,
             profileImage: driverData.profileImage,
           }}
+          onProfileImageUpdate={(url: string) => {
+            setDriverData((prev) => ({ ...prev, profileImage: url }));
+            // keep localStorage in sync (authService uses 'userData' key)
+            const currentUser = authService.getCurrentUser();
+            if (currentUser) {
+              const updated = { ...currentUser, profileImage: url };
+              localStorage.setItem('userData', JSON.stringify(updated));
+            }
+          }}
           handleLogout={handleLogout}
         />
 
@@ -309,6 +324,7 @@ export const DriverProfile = () => {
       <AddVehicleModal
         open={addVehicleModalOpen}
         onClose={() => setAddVehicleModalOpen(false)}
+        onSuccess={handleVehicleAdded}
       />
     </div>
   );

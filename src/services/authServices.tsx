@@ -18,9 +18,15 @@ export interface DriverSignupData {
   name: string;
   email: string;
   password: string;
-  phone: string;
-  drivinglicenseNo: string;
+  phoneNumber: string;
+  licenseNumber: string;
+  address: string;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
   agreement: boolean;
+  role: 'DRIVER';
 }
 
 export interface AuthResponse {
@@ -140,29 +146,38 @@ export const authService = {
   driverRegister: async (data: DriverSignupData): Promise<AuthResponse> => {
     try {
       console.log('🔵 [DRIVER REGISTER] Sending request:', {
-        fullName: data.name,
+        name: data.name,
         email: data.email,
-        phoneNumber: data.phone,
-        driverLicenseNumber: data.drivinglicenseNo,
-      });
-      
-      const response = await api.post<AuthResponse>('/auth/register-driver', {
-        fullName: data.name,
-        email: data.email,
-        phoneNumber: data.phone,
+        phoneNumber: data.phoneNumber,
         password: data.password,
-        driverLicenseNumber: data.drivinglicenseNo,
+        address: data.address,
+        location: data.location,
+        agreement: data.agreement,
+        role: data.role,
+        licenseNumber: data.licenseNumber,
       });
-      
+
+      const response = await api.post<AuthResponse>('/auth/register-driver', {
+        name: data.name,
+        email: data.email,
+        phoneNumber: data.phoneNumber,
+        password: data.password,
+        address: data.address,
+        location: data.location,
+        agreement: data.agreement,
+        role: data.role,
+        licenseNumber: data.licenseNumber,
+      });
+
       console.log('✅ [DRIVER REGISTER] Response:', response.data);
-      
+
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('userRole', 'DRIVER');
         localStorage.setItem('userData', JSON.stringify(response.data.driver));
         console.log('✅ [DRIVER REGISTER] Token and driver data saved to localStorage');
       }
-      
+
       return response.data;
     } catch (error: any) {
       console.error('❌ [DRIVER REGISTER] Error:', {

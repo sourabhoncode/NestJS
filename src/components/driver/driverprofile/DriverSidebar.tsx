@@ -1,6 +1,7 @@
 "use client";
 
 import { Avatar, Button, Tabs, Upload, message } from "antd";
+import api from '../../../services/api';
 import {
   UserOutlined,
   HomeOutlined,
@@ -26,6 +27,7 @@ interface DriverSidebarProps {
     profileImage: string | null;
   };
   handleLogout: () => void;
+  onProfileImageUpdate?: (url: string) => void;
 }
 
 export const DriverSidebar = ({
@@ -36,6 +38,7 @@ export const DriverSidebar = ({
   windowWidth,
   driverData,
   handleLogout,
+  onProfileImageUpdate,
 }: DriverSidebarProps) => {
   const tabItems = [
     { key: "home", label: "Home", icon: <HomeOutlined /> },
@@ -95,20 +98,56 @@ export const DriverSidebar = ({
               <Upload
                 accept="image/*"
                 showUploadList={false}
-                beforeUpload={(file) => {
+                beforeUpload={async (file) => {
                   const isImage = file.type.startsWith('image/');
                   if (!isImage) {
                     message.error('You can only upload image files!');
-                    return false;
+                    return Upload.LIST_IGNORE;
                   }
                   const isLt2M = file.size / 1024 / 1024 < 2;
                   if (!isLt2M) {
                     message.error('Image must be smaller than 2MB!');
-                    return false;
+                    return Upload.LIST_IGNORE;
                   }
-                  // TODO: Implement actual upload to backend
-                  message.success('Profile picture upload functionality coming soon!');
-                  return false;
+
+                  // Upload to backend /drivers/upload-document (requires auth)
+                  try {
+                    const form = new FormData();
+                    form.append('file', file);
+                    const resp = await api.post('/drivers/upload-document', form, {
+                      headers: { 'Content-Type': 'multipart/form-data' },
+                    });
+
+                    const url = resp?.data?.url || resp?.data?.driver?.documents?.slice(-1)[0]?.url;
+
+                    if (url) {
+                      // Update local storage userData so other parts reflect the change
+                      const currentUser = localStorage.getItem('userData');
+                      if (currentUser) {
+                        try {
+                          const parsed = JSON.parse(currentUser);
+                          parsed.profileImage = url;
+                          localStorage.setItem('userData', JSON.stringify(parsed));
+                          message.success('Profile picture uploaded');
+                          // notify parent
+                          // Call optional callback
+                          if (typeof onProfileImageUpdate === 'function') {
+                            onProfileImageUpdate(url);
+                          }
+                        } catch (e) {
+                          console.warn('Failed to update localStorage profile image', e);
+                        }
+                      }
+                    } else {
+                      message.warning('Uploaded but could not find file URL');
+                    }
+                  } catch (err: any) {
+                    console.error('Profile upload failed', err);
+                    message.error(err?.response?.data?.message || 'Upload failed');
+                  }
+
+                  // Prevent default upload list
+                  return Upload.LIST_IGNORE;
                 }}
               >
                 <Button
@@ -132,7 +171,7 @@ export const DriverSidebar = ({
             <Tabs
               activeKey={activeTab}
               onChange={(key) => onTabChange(key as DriverTabKey)}
-              tabPlacement="left"
+              tabPlacement={'left' as any}
               className="driver-profile-tabs"
               items={tabItems.map((tab) => ({
                 key: tab.key,
