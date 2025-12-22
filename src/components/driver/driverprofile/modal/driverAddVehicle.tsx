@@ -6,9 +6,10 @@ import vehicleService from '../../../../services/vehicleService';
 interface AddVehicleModalProps {
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ open, onClose }) => {
+const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ open, onClose, onSuccess }) => {
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
   const [year, setYear] = useState("");
@@ -47,21 +48,59 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ open, onClose }) => {
     setLoading(true);
 
     try {
-      // Prepare vehicle data
-      const vehicleData = {
-        make,
+      // Prepare vehicle data matching backend DTO
+      const vehiclePayload = {
+        companyName: make,
         model,
         year: parseInt(year),
         seats: parseInt(seats),
-        licensePlate,
+        licensePlateNumber: licensePlate,
         vehicleType,
         vehicleClass,
       };
 
-      // Create vehicle - use addVehicle instead of createVehicle
-      await vehicleService.addVehicle(vehicleData);
+      // 1) Create vehicle record
+      const createdVehicle = await vehicleService.addVehicle(vehiclePayload as any);
+
+      // 2) Upload documents (if provided) and register URLs
+      const uploadAndRegisterDoc = async (file: File | null, docType: string) => {
+        if (!file) return null;
+        const uploadRes = await vehicleService.uploadVehicleDocument(createdVehicle._id, file);
+        const fileUrl = uploadRes?.url || uploadRes?.data?.url || null;
+        if (fileUrl) {
+          await vehicleService.addVehicleDocument(createdVehicle._id, docType, fileUrl);
+        }
+        return fileUrl;
+      };
+
+      try {
+        await uploadAndRegisterDoc(licenseFile, 'drivingLicense');
+        await uploadAndRegisterDoc(insuranceFile, 'insuranceProof');
+        await uploadAndRegisterDoc(addressProofFile, 'addressProof');
+        await uploadAndRegisterDoc(policeCertFile, 'policeCertificate');
+      } catch (uploadErr: any) {
+        console.warn('Some documents failed to upload:', uploadErr);
+      }
+
+      // 3) Upload vehicle image (if any) and attach to vehicle
+      if (vehicleImage) {
+        try {
+          const imgRes = await vehicleService.uploadVehicleImage(createdVehicle._id, vehicleImage);
+          const imgUrl = imgRes?.url || imgRes?.data?.url || null;
+          if (imgUrl) {
+            await vehicleService.addVehicleImages(createdVehicle._id, [imgUrl]);
+            // Also set the main vehicleImage field for quick access
+            await vehicleService.updateVehicle(createdVehicle._id, { vehicleImage: imgUrl } as any);
+          }
+        } catch (imgErr: any) {
+          console.warn('Vehicle image upload failed:', imgErr);
+        }
+      }
 
       setSuccess(true);
+
+      // notify parent to refresh vehicle list
+      try { onSuccess && onSuccess(); } catch (e) { }
 
       // Close modal after success
       setTimeout(() => {
