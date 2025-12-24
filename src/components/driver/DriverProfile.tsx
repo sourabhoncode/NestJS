@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Spin, message, Button } from "antd";
 import { useNavigate } from "react-router-dom";
 import { MenuOutlined } from "@ant-design/icons";
@@ -49,44 +49,69 @@ export const DriverProfile = () => {
 
   const navigate = useNavigate();
 
-  // LOAD DRIVER DATA FROM LOCALSTORAGE
-  useEffect(() => {
+  // LOAD DRIVER DATA FROM BACKEND
+  const loadDriverData = useCallback(async () => {
     try {
+      setLoading(true);
       const currentUser = authService.getCurrentUser();
-      
+
       if (!currentUser) {
         navigate("/driver/login");
         return;
       }
 
-      // Map the driver data from localStorage
-      setDriverData({
-        name: currentUser.fullName || "",
-        email: currentUser.email || "",
-        phoneNumber: currentUser.phoneNumber || "",
-        driverLicenseNumber: currentUser.driverLicenseNumber || "",
-        address: currentUser.address || "",
-        profileImage: currentUser.profileImage || null,
-        personalInfo: {
-          bloodGroup: currentUser.personalInfo?.bloodGroup || "",
-          dob: currentUser.personalInfo?.dob || "",
-          languages: currentUser.personalInfo?.languages || [],
-          certificates: currentUser.personalInfo?.certificates || [],
-          emergencyContact: currentUser.personalInfo?.emergencyContact || {
-            name: "",
-            phone: "",
-            relationship: "",
+      // Always fetch fresh data from backend (don't rely on potentially stale localStorage)
+      try {
+        const response = await authService.fetchDriverProfile();
+        const backendData = response.driver || response;
+
+        // Map the driver data from backend
+        setDriverData({
+          name: backendData.fullName || "",
+          email: backendData.email || "",
+          phoneNumber: backendData.phoneNumber || "",
+          driverLicenseNumber: backendData.driverLicenseNumber || "",
+          address: backendData.address || "",
+          profileImage: backendData.profileImage || null,
+          personalInfo: {
+            bloodGroup: backendData.personalInfo?.bloodGroup || "",
+            dob: backendData.personalInfo?.dob || "",
+            languages: backendData.personalInfo?.languages || [],
+            certificates: backendData.personalInfo?.certificates || [],
+            emergencyContact: backendData.personalInfo?.emergencyContact || {
+              name: "",
+              phone: "",
+              relationship: "",
+            },
           },
-        },
-      });
+        });
+        setLoading(false);
+      } catch (backendError: any) {
+        // If backend fetch fails, force logout and redirect to login
+        // This ensures user logs in again and gets fresh token
+        console.error('Failed to fetch driver profile:', backendError);
+
+        if (backendError.response?.status === 401) {
+          // Token expired or invalid
+          authService.logout();
+          message.error('Session expired. Please login again.');
+          navigate("/driver/login");
+        } else {
+          // Other errors - show error and redirect
+          message.error('Failed to load profile. Please try again.');
+          navigate("/driver/login");
+        }
+        setLoading(false);
+      }
     } catch (error) {
-      console.error("Failed to load driver data:", error);
-      message.error("Failed to load driver data");
-      navigate("/driver/login");
-    } finally {
+      console.error("Error in loadDriverData:", error);
       setLoading(false);
     }
   }, [navigate]);
+
+  useEffect(() => {
+    loadDriverData();
+  }, [loadDriverData]);
 
   // Handle window resize for responsive sidebar
   useEffect(() => {
@@ -130,7 +155,7 @@ export const DriverProfile = () => {
     setVehiclesRefreshSignal((s) => s + 1);
   };
 
-  const handleSavePersonalInfo = (updatedData: {
+  const handleSavePersonalInfo = async (updatedData: {
     dateOfBirth?: string;
     bloodGroup?: string;
     address?: string;
@@ -142,48 +167,69 @@ export const DriverProfile = () => {
       relation: string;
     };
   }) => {
-    // Update driver data with new personal info
-    const emergencyContact = updatedData.emergencyContact ? {
-      name: updatedData.emergencyContact.name || "",
-      phone: updatedData.emergencyContact.phone || "",
-      relationship: updatedData.emergencyContact.relation || "",
-    } : {
-      name: "",
-      phone: "",
-      relationship: "",
-    };
+    try {
+      setLoading(true);
 
-    setDriverData((prev) => ({
-      ...prev,
-      address: updatedData.address || prev.address,
-      personalInfo: {
-        bloodGroup: updatedData.bloodGroup || prev.personalInfo?.bloodGroup || "",
-        dob: updatedData.dateOfBirth || prev.personalInfo?.dob || "",
-        languages: updatedData.languages || prev.personalInfo?.languages || [],
-        certificates: updatedData.certifications || prev.personalInfo?.certificates || [],
-        emergencyContact,
-      },
-    }));
+      // Prepare data for backend
+      const emergencyContact = updatedData.emergencyContact ? {
+        name: updatedData.emergencyContact.name || "",
+        phone: updatedData.emergencyContact.phone || "",
+        relationship: updatedData.emergencyContact.relation || "",
+      } : {
+        name: "",
+        phone: "",
+        relationship: "",
+      };
 
-    // Update localStorage
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      const updatedUser = {
-        ...currentUser,
-        address: updatedData.address || currentUser.address,
+      // Call backend API to update driver profile
+      await authService.updateDriverProfile({
+        name: driverData.name,
+        email: driverData.email,
+        phoneNumber: driverData.phoneNumber,
+        licenseNumber: driverData.driverLicenseNumber,
+        address: updatedData.address || driverData.address,
         personalInfo: {
-          bloodGroup: updatedData.bloodGroup || currentUser.personalInfo?.bloodGroup,
-          dob: updatedData.dateOfBirth || currentUser.personalInfo?.dob,
-          languages: updatedData.languages || currentUser.personalInfo?.languages,
-          certificates: updatedData.certifications || currentUser.personalInfo?.certificates,
+          bloodGroup: updatedData.bloodGroup || driverData.personalInfo?.bloodGroup,
+          dob: updatedData.dateOfBirth || driverData.personalInfo?.dob,
+          languages: updatedData.languages || driverData.personalInfo?.languages || [],
+          certificates: updatedData.certifications || driverData.personalInfo?.certificates || [],
           emergencyContact,
         },
-      };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-    }
+      });
 
-    setPersonalInfoModalOpen(false);
-    message.success("Personal information updated successfully");
+      // Fetch fresh data from backend
+      const response = await authService.fetchDriverProfile();
+      const freshData = response.driver || response;
+
+      // Update component state with fresh backend data
+      setDriverData({
+        name: freshData.fullName || "",
+        email: freshData.email || "",
+        phoneNumber: freshData.phoneNumber || "",
+        driverLicenseNumber: freshData.driverLicenseNumber || "",
+        address: freshData.address || "",
+        profileImage: freshData.profileImage || null,
+        personalInfo: {
+          bloodGroup: freshData.personalInfo?.bloodGroup || "",
+          dob: freshData.personalInfo?.dob || "",
+          languages: freshData.personalInfo?.languages || [],
+          certificates: freshData.personalInfo?.certificates || [],
+          emergencyContact: freshData.personalInfo?.emergencyContact || {
+            name: "",
+            phone: "",
+            relationship: "",
+          },
+        },
+      });
+
+      setPersonalInfoModalOpen(false);
+      setLoading(false);
+      message.success("Personal information updated successfully");
+    } catch (error) {
+      setLoading(false);
+      console.error("Error saving driver personal info:", error);
+      message.error("Failed to update personal information");
+    }
   };
 
   const toggleSidebar = () => {
@@ -209,6 +255,7 @@ export const DriverProfile = () => {
             driverData={driverData}
             loading={loading}
             onEditPersonalInfo={handleNavigateToPersonalInfo}
+            onProfileImageUpdate={loadDriverData}
           />
         );
       case "personalInfo":
@@ -237,6 +284,7 @@ export const DriverProfile = () => {
             driverData={driverData}
             loading={loading}
             onEditPersonalInfo={handleNavigateToPersonalInfo}
+            onProfileImageUpdate={loadDriverData}
           />
         );
     }
@@ -276,13 +324,36 @@ export const DriverProfile = () => {
             email: driverData.email,
             profileImage: driverData.profileImage,
           }}
-          onProfileImageUpdate={(url: string) => {
-            setDriverData((prev) => ({ ...prev, profileImage: url }));
-            // keep localStorage in sync (authService uses 'userData' key)
-            const currentUser = authService.getCurrentUser();
-            if (currentUser) {
-              const updated = { ...currentUser, profileImage: url };
-              localStorage.setItem('userData', JSON.stringify(updated));
+          onProfileImageUpdate={async (url: string) => {
+            try {
+              setLoading(true);
+
+              // Call backend API to update profile image
+              await authService.updateDriverProfile({
+                name: driverData.name,
+                email: driverData.email,
+                phoneNumber: driverData.phoneNumber,
+                licenseNumber: driverData.driverLicenseNumber,
+                address: driverData.address,
+                profileImage: url,
+              });
+
+              // Fetch fresh data from backend
+              const response = await authService.fetchDriverProfile();
+              const freshData = response.driver || response;
+
+              // Update component state with fresh backend data
+              setDriverData((prev) => ({
+                ...prev,
+                profileImage: freshData.profileImage || url,
+              }));
+
+              setLoading(false);
+              message.success("Profile image updated successfully");
+            } catch (error) {
+              setLoading(false);
+              console.error("Error updating profile image:", error);
+              message.error("Failed to update profile image");
             }
           }}
           handleLogout={handleLogout}
@@ -293,7 +364,7 @@ export const DriverProfile = () => {
           <div className="w-full mx-auto bg-white rounded-xl shadow-sm p-4 md:p-6">
             {renderTabContent()}
           </div>
-          
+
           {/* Footer */}
           <div className="mt-4 text-center text-gray-500 text-sm py-2">
             <p>&copy; {new Date().getFullYear()} Gokeral. All rights reserved.</p>

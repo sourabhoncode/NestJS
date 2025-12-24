@@ -22,6 +22,7 @@ interface SidebarProps {
   sidebarOpen: boolean;
   windowWidth: number;
   toggleSidebar: () => void;
+  onProfileImageUpdate?: (url: string) => void;
 }
 
 export const UserSidebar = ({
@@ -32,6 +33,7 @@ export const UserSidebar = ({
   sidebarOpen,
   windowWidth,
   toggleSidebar,
+  onProfileImageUpdate,
 }: SidebarProps) => {
   const tabItems = [
     { key: "home", label: "Home", icon: <HomeOutlined /> },
@@ -92,7 +94,7 @@ export const UserSidebar = ({
               <Upload
                 accept="image/*"
                 showUploadList={false}
-                beforeUpload={(file) => {
+                beforeUpload={async (file) => {
                   const isImage = file.type.startsWith('image/');
                   if (!isImage) {
                     message.error('You can only upload image files!');
@@ -103,8 +105,29 @@ export const UserSidebar = ({
                     message.error('Image must be smaller than 2MB!');
                     return false;
                   }
-                  // TODO: Implement actual upload to backend
-                  message.success('Profile picture upload functionality coming soon!');
+
+                  try {
+                    // Upload file to backend
+                    const form = new FormData();
+                    form.append('file', file);
+                    const response = await api.post('/users/upload-document', form, {
+                      headers: { 'Content-Type': 'multipart/form-data' },
+                    });
+
+                    const url = response?.data?.url;
+
+                    if (url) {
+                      message.success('Profile picture uploaded successfully!');
+                      // Trigger callback to update parent component
+                      if (typeof onProfileImageUpdate === 'function') {
+                        onProfileImageUpdate(url);
+                      }
+                    }
+                  } catch (err: any) {
+                    console.error('Profile upload failed', err);
+                    message.error(err?.response?.data?.message || 'Upload failed');
+                  }
+
                   return false;
                 }}
               >

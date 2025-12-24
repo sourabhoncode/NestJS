@@ -115,7 +115,7 @@ const RegistrationForm = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -130,10 +130,13 @@ const RegistrationForm = ({
         const driverData = {
           name,
           email,
-          phone,
+          phoneNumber: phone,
           password,
-          drivinglicenseNo: drivinglicenseNo || '',
+          licenseNumber: drivinglicenseNo || '',
           agreement,
+          address: '',
+          location: { latitude: 0, longitude: 0 },
+          role: 'DRIVER' as const,
         };
         await authService.driverRegister(driverData);
         setSuccess(true);

@@ -37,9 +37,10 @@ interface DriverHomeTabProps {
   driverData: DriverData;
   loading: boolean;
   onEditPersonalInfo: () => void;
+  onProfileImageUpdate?: () => void;
 }
 
-export const DriverHomeTab = ({ driverData, loading, onEditPersonalInfo }: DriverHomeTabProps) => {
+export const DriverHomeTab = ({ driverData, loading, onEditPersonalInfo, onProfileImageUpdate }: DriverHomeTabProps) => {
   return (
     <div className="w-full space-y-6">
 
@@ -66,7 +67,7 @@ export const DriverHomeTab = ({ driverData, loading, onEditPersonalInfo }: Drive
               <Upload
                 accept="image/*"
                 showUploadList={false}
-                beforeUpload={(file) => {
+                beforeUpload={async (file) => {
                   const isImage = file.type.startsWith('image/');
                   if (!isImage) {
                     message.error('You can only upload image files!');
@@ -77,8 +78,29 @@ export const DriverHomeTab = ({ driverData, loading, onEditPersonalInfo }: Drive
                     message.error('Image must be smaller than 2MB!');
                     return false;
                   }
-                  // TODO: Implement actual upload to backend
-                  message.success('Profile picture upload functionality coming soon!');
+
+                  try {
+                    // Upload file to backend
+                    const form = new FormData();
+                    form.append('file', file);
+                    const response = await api.post('/drivers/upload-document', form, {
+                      headers: { 'Content-Type': 'multipart/form-data' },
+                    });
+
+                    const url = response?.data?.url;
+
+                    if (url) {
+                      message.success('Profile picture uploaded successfully!');
+                      // Trigger callback to update parent component
+                      if (typeof onProfileImageUpdate === 'function') {
+                        onProfileImageUpdate();
+                      }
+                    }
+                  } catch (err: any) {
+                    console.error('Profile upload failed', err);
+                    message.error(err?.response?.data?.message || 'Upload failed');
+                  }
+
                   return false;
                 }}
               >
@@ -97,7 +119,7 @@ export const DriverHomeTab = ({ driverData, loading, onEditPersonalInfo }: Drive
             <div className="space-y-2">
               <h2 className="text-2xl font-bold text-gray-800">{driverData.name}</h2>
               <p className="text-sm text-gray-500">Driver Account</p>
-              
+
               <div className="flex items-center gap-2 text-gray-600">
                 <MailOutlined className="text-lg" />
                 <span>{driverData.email}</span>
@@ -119,12 +141,12 @@ export const DriverHomeTab = ({ driverData, loading, onEditPersonalInfo }: Drive
 
       {/* CONTENT GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6">
-        
+
         {/* PERSONAL INFORMATION */}
         <Card className="shadow-md rounded-2xl">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold text-gray-800">Personal Information</h3>
-            <Button 
+            <Button
               type="primary"
               icon={<EditOutlined />}
               onClick={onEditPersonalInfo}

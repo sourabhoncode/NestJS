@@ -24,9 +24,10 @@ interface HomeTabProps {
   userData: UserData;
   loading: boolean;
   handleTabChange: (key: TabKey) => void;
+  onProfileImageUpdate?: () => void;
 }
 
-export const HomeTab = ({ userData, loading, handleTabChange }: HomeTabProps) => {
+export const HomeTab = ({ userData, loading, handleTabChange, onProfileImageUpdate }: HomeTabProps) => {
   const recentBookings: Array<{
     id: string;
     vehicle: string;
@@ -34,21 +35,21 @@ export const HomeTab = ({ userData, loading, handleTabChange }: HomeTabProps) =>
     endDate: string;
     status: BookingStatus;
   }> = [
-    {
-      id: "BK-001",
-      vehicle: "Toyota Camry",
-      startDate: "2023-04-10",
-      endDate: "2023-04-15",
-      status: "Completed",
-    },
-    {
-      id: "BK-002",
-      vehicle: "Honda Civic",
-      startDate: "2023-05-20",
-      endDate: "2023-05-25",
-      status: "Upcoming",
-    },
-  ];
+      {
+        id: "BK-001",
+        vehicle: "Toyota Camry",
+        startDate: "2023-04-10",
+        endDate: "2023-04-15",
+        status: "Completed",
+      },
+      {
+        id: "BK-002",
+        vehicle: "Honda Civic",
+        startDate: "2023-05-20",
+        endDate: "2023-05-25",
+        status: "Upcoming",
+      },
+    ];
 
   const accountSections = [
     { title: "Personal Information", desc: "Name, email, phone", tab: "personal" as TabKey },
@@ -69,7 +70,7 @@ export const HomeTab = ({ userData, loading, handleTabChange }: HomeTabProps) =>
     <div className="w-full space-y-6">
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* LEFT SIDE - Profile Card */}
         <Card className="shadow-lg rounded-2xl lg:col-span-1 bg-gradient-to-br from-gray-800 to-gray-900 text-white border-0">
           <Skeleton loading={loading} active avatar>
@@ -93,7 +94,7 @@ export const HomeTab = ({ userData, loading, handleTabChange }: HomeTabProps) =>
                 <Upload
                   accept="image/*"
                   showUploadList={false}
-                  beforeUpload={(file) => {
+                  beforeUpload={async (file) => {
                     const isImage = file.type.startsWith('image/');
                     if (!isImage) {
                       message.error('You can only upload image files!');
@@ -104,8 +105,29 @@ export const HomeTab = ({ userData, loading, handleTabChange }: HomeTabProps) =>
                       message.error('Image must be smaller than 2MB!');
                       return false;
                     }
-                    // TODO: Implement actual upload to backend
-                    message.success('Profile picture upload functionality coming soon!');
+
+                    try {
+                      // Upload file to backend
+                      const form = new FormData();
+                      form.append('file', file);
+                      const response = await api.post('/users/upload-document', form, {
+                        headers: { 'Content-Type': 'multipart/form-data' },
+                      });
+
+                      const url = response?.data?.url;
+
+                      if (url) {
+                        message.success('Profile picture uploaded successfully!');
+                        // Trigger callback to update parent component
+                        if (typeof onProfileImageUpdate === 'function') {
+                          onProfileImageUpdate();
+                        }
+                      }
+                    } catch (err: any) {
+                      console.error('Profile upload failed', err);
+                      message.error(err?.response?.data?.message || 'Upload failed');
+                    }
+
                     return false;
                   }}
                 >
@@ -125,7 +147,7 @@ export const HomeTab = ({ userData, loading, handleTabChange }: HomeTabProps) =>
                 <p className="text-gray-400 text-sm">Premium User</p>
               </div>
 
-              
+
             </div>
           </Skeleton>
         </Card>
@@ -147,7 +169,7 @@ export const HomeTab = ({ userData, loading, handleTabChange }: HomeTabProps) =>
 
           <Skeleton loading={loading} active>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
+
               {/* Registered Email */}
               <div>
                 <p className="text-xs text-gray-500 uppercase mb-2">Registered Email</p>
@@ -191,13 +213,13 @@ export const HomeTab = ({ userData, loading, handleTabChange }: HomeTabProps) =>
 
       {/* CONTENT GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+
         {/* RECENT BOOKINGS */}
         <Card className="shadow-md rounded-2xl">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold text-gray-800">Recent Bookings</h3>
-            <Button 
-              type="link" 
+            <Button
+              type="link"
               onClick={() => handleTabChange('bookings')}
               className="text-blue-600 hover:text-blue-700"
             >

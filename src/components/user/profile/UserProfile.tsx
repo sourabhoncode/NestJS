@@ -6,7 +6,7 @@ import { UserHeader } from "../UserHeader"
 import { UserSidebar } from "./UserSidebar";
 import { HomeTab } from "../tabs/HomeTab";
 import { PersonalInfoTab } from "../tabs/PersonalInfoTab";
-import {  BookingsTabUser } from "../tabs/BookingTab";
+import { BookingsTabUser } from "../tabs/BookingTab";
 import { SecurityTab } from "../tabs/SecurityTab";
 import { PrivacyTab } from "../tabs/PrivacyTab";
 import { DataTab } from "../tabs/DataTab";
@@ -43,27 +43,39 @@ export const UserProfile = () => {
       if (typeof window === "undefined") return;
 
       setLoading(true);
-      
-      // Get user data from localStorage (saved during login)
-      const storedUserData = authService.getCurrentUser();
-      
-      if (storedUserData) {
+
+      // Always fetch fresh data from backend (don't rely on potentially stale localStorage)
+      try {
+        const response = await authService.fetchUserProfile();
+        const backendData = response.user || response;
+
         const userData: UserData = {
-          name: storedUserData.fullName || storedUserData.name || 'User',
-          email: storedUserData.email || '',
-          phoneNumber: storedUserData.phoneNumber || '',
-          address: storedUserData.address || '',
-          profileImage: null,
-          location: storedUserData.address || null,
+          name: backendData.fullName || backendData.name || 'User',
+          email: backendData.email || '',
+          phoneNumber: backendData.phoneNumber || '',
+          address: backendData.address || '',
+          profileImage: backendData.profileImage || null,
+          location: backendData.address || null,
         };
-        
+
         setUserData(userData);
         setLoading(false);
         setTimeout(() => setFadeIn(true), 100);
-      } else {
-        // If no user data, redirect to login
-        console.error('No user data found');
-        window.location.href = '/user/login';
+      } catch (backendError: any) {
+        // If backend fetch fails, force logout and redirect to login
+        // This ensures user logs in again and gets fresh data
+        console.error('Failed to fetch user profile:', backendError);
+
+        if (backendError.response?.status === 401) {
+          // Token expired or invalid
+          authService.logout();
+          window.location.href = '/user/login';
+        } else {
+          // Other errors
+          console.error('Error fetching user data:', backendError);
+          window.location.href = '/user/login';
+        }
+        setLoading(false);
       }
     } catch (error) {
       setLoading(false);
@@ -112,30 +124,24 @@ export const UserProfile = () => {
   const updateUserData = async (values: Partial<UserData>) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("accessToken");
-      const stored = localStorage.getItem("userData");
-      const userEmail = stored ? JSON.parse(stored).email : localStorage.getItem("userEmail");
 
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/userDetails`,
-        { ...values },
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            "x-auth-token": token,
-          },
-          params: {
-            id: userEmail,
-          },
-        }
-      );
+      // Call backend to update profile with correct field mapping
+      await authService.updateUserProfile({
+        name: values.name,
+        email: values.email,
+        phone: values.phoneNumber,
+        address: values.address,
+      });
 
-      getUserDetails();
-      setUserData((prev) => prev ? { ...prev, ...values } : null);
+      // Fetch fresh data from backend to ensure consistency
+      await getUserDetails();
+
       setLoading(false);
+      console.log('✅ Profile updated successfully');
     } catch (error) {
       setLoading(false);
       console.error("Error updating user data:", error);
+      throw error;
     }
   };
 
@@ -170,6 +176,7 @@ export const UserProfile = () => {
         userData={userData}
         loading={loading}
         handleTabChange={handleTabChange}
+        onProfileImageUpdate={getUserDetails}
       />
     ),
     personal: (
@@ -237,6 +244,7 @@ export const UserProfile = () => {
           sidebarOpen={sidebarOpen}
           windowWidth={windowWidth}
           toggleSidebar={toggleSidebar}
+          onProfileImageUpdate={getUserDetails}
         />
 
         {/* Main Content with transition effects */}
@@ -252,7 +260,7 @@ export const UserProfile = () => {
               tabContent[activeTab]
             )}
           </div>
-          
+
           {/* Footer */}
           <div className="mt-4 text-center text-gray-500 text-sm py-2">
             <p>&copy; {new Date().getFullYear()} Your Company. All rights reserved.</p>

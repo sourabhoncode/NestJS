@@ -121,22 +121,30 @@ export const DriverSidebar = ({
                     const url = resp?.data?.url || resp?.data?.driver?.documents?.slice(-1)[0]?.url;
 
                     if (url) {
-                      // Update local storage userData so other parts reflect the change
-                      const currentUser = localStorage.getItem('userData');
-                      if (currentUser) {
-                        try {
+                      // Save the profileImage URL to the backend via the update endpoint
+                      try {
+                        const currentUser = localStorage.getItem('userData');
+                        if (currentUser) {
                           const parsed = JSON.parse(currentUser);
-                          parsed.profileImage = url;
-                          localStorage.setItem('userData', JSON.stringify(parsed));
-                          message.success('Profile picture uploaded');
-                          // notify parent
-                          // Call optional callback
+
+                          // Call the update endpoint to save profileImage
+                          await api.patch('/drivers/update', {
+                            fullName: parsed.fullName,
+                            email: parsed.email,
+                            phoneNumber: parsed.phoneNumber,
+                            profileImage: url,  // Save the image URL to backend
+                          });
+
+                          message.success('Profile picture uploaded and saved');
+
+                          // Call optional callback to update parent component
                           if (typeof onProfileImageUpdate === 'function') {
                             onProfileImageUpdate(url);
                           }
-                        } catch (e) {
-                          console.warn('Failed to update localStorage profile image', e);
                         }
+                      } catch (updateError: any) {
+                        console.error('Failed to save profile image to backend', updateError);
+                        message.error('Uploaded but failed to save. Please try again.');
                       }
                     } else {
                       message.warning('Uploaded but could not find file URL');

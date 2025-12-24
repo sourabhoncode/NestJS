@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -16,10 +16,10 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    console.log(`📤 [API REQUEST] ${config.method?.toUpperCase()} ${config.url}`, 
+
+    console.log(`📤 [API REQUEST] ${config.method?.toUpperCase()} ${config.url}`,
       config.data ? config.data : '');
-    
+
     return config;
   },
   (error) => {
@@ -44,15 +44,15 @@ api.interceptors.response.use(
     });
 
     // Only redirect to home on 401 if it's NOT a login/register endpoint
-    const isAuthEndpoint = error.config?.url?.includes('/login') || 
-                          error.config?.url?.includes('/register');
-    
+    const isAuthEndpoint = error.config?.url?.includes('/login') ||
+      error.config?.url?.includes('/register');
+
     if (error.response?.status === 401 && !isAuthEndpoint) {
       console.warn('⚠️ [UNAUTHORIZED] Clearing localStorage and redirecting');
       localStorage.clear();
       window.location.href = '/';
     }
-    
+
     return Promise.reject(error);
   }
 );

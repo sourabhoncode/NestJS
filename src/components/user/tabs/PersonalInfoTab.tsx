@@ -8,20 +8,33 @@ import type { UserData } from "../profile/UserProfile";
 interface PersonalInfoTabProps {
   userData: UserData;
   loading: boolean;
+  updateUserData: (values: Partial<UserData>) => Promise<void>;
 }
 
-export const PersonalInfoTab = ({ userData, loading }: PersonalInfoTabProps) => {
+export const PersonalInfoTab = ({ userData, loading, updateUserData }: PersonalInfoTabProps) => {
   const [form] = Form.useForm();
   const [editing, setEditing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSave = async (values: any) => {
     try {
-      // TODO: Implement API call to update user data
-      console.log("Saving personal info:", values);
-      message.success("Personal information updated successfully");
+      setSubmitting(true);
+      console.log("💾 Saving personal info:", values);
+
+      // Call the updateUserData function from parent component
+      await updateUserData({
+        name: values.name,
+        email: values.email,
+        phoneNumber: values.phoneNumber,
+        address: values.address,
+      });
+
+      message.success("✅ Personal information updated successfully");
       setEditing(false);
+      setSubmitting(false);
     } catch (error) {
-      message.error("Failed to update personal information");
+      setSubmitting(false);
+      message.error("❌ Failed to update personal information");
       console.error(error);
     }
   };
@@ -102,10 +115,10 @@ export const PersonalInfoTab = ({ userData, loading }: PersonalInfoTabProps) => 
 
           {editing && (
             <div className="flex gap-3">
-              <Button type="primary" htmlType="submit" size="large">
+              <Button type="primary" htmlType="submit" size="large" loading={submitting}>
                 Save Changes
               </Button>
-              <Button size="large" onClick={() => setEditing(false)}>
+              <Button size="large" onClick={() => setEditing(false)} disabled={submitting}>
                 Cancel
               </Button>
             </div>
